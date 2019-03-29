@@ -399,6 +399,21 @@
               <FileType>1</FileType>
               <FilePath>.\Src\g_gpio.c</FilePath>
             </File>
+            <File>
+              <FileName>audio.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Src\audio.c</FilePath>
+            </File>
+            <File>
+              <FileName>son.asm</FileName>
+              <FileType>2</FileType>
+              <FilePath>.\Src\son.asm</FilePath>
+            </File>
+            <File>
+              <FileName>callback.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>.\Src\callback.s</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -798,6 +813,21 @@
               <FileName>g_gpio.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\Src\g_gpio.c</FilePath>
+            </File>
+            <File>
+              <FileName>audio.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Src\audio.c</FilePath>
+            </File>
+            <File>
+              <FileName>son.asm</FileName>
+              <FileType>2</FileType>
+              <FilePath>.\Src\son.asm</FilePath>
+            </File>
+            <File>
+              <FileName>callback.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>.\Src\callback.s</FilePath>
             </File>
           </Files>
         </Group>

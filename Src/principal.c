@@ -1,5 +1,6 @@
 #include "gassp72.h"
 #include "g_gpio.h"
+#include "audio.h"
 
 #define GREEN_CPU
 
@@ -20,7 +21,7 @@ switch	( cnt10Hz % 10 )
 		GPIO_Set( GPIOC, 12 );
 		break;
 	}
-if	( cnt10Hz >= 31 )
+if	( ( cnt10Hz >= 1 ) && ( !audio_is_playing() ) )
 	{
 	GPIO_Configure( GPIOB, 14, INPUT, INPUT_FLOATING ); 
 	GPIO_Set( GPIOB, 14 );		// power unlock
@@ -50,6 +51,9 @@ SysTick_On;
 SysTick_Enable_IT;
 
 gpio_init_aux();
+audio_init();
+
+audio_start();
 
 while	(1)
 	{
