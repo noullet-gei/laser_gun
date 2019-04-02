@@ -33,8 +33,6 @@ if	( periode_PWM_ticks > (72000000/20000) )
 	periode_PWM_ticks = PeriodeSonMicroSec * (72/3);
 etat.resolution = PWM_Init_ff( TIM3, 3, periode_PWM_ticks );
 
-// la sortie PB0 pour la PWM (TIM3-CH3)
-GPIO_Configure(GPIOB, 0, OUTPUT, ALT_PPULL);
 
 // le timer pour l'interruption audio
 Timer_1234_Init_ff( TIM4, etat.periode_ticks );

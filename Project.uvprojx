@@ -405,14 +405,14 @@
               <FilePath>.\Src\audio.c</FilePath>
             </File>
             <File>
-              <FileName>son.asm</FileName>
-              <FileType>2</FileType>
-              <FilePath>.\Src\son.asm</FilePath>
-            </File>
-            <File>
               <FileName>callback.s</FileName>
               <FileType>2</FileType>
               <FilePath>.\Src\callback.s</FilePath>
+            </File>
+            <File>
+              <FileName>zip_unk.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>.\Src\zip_unk.s</FilePath>
             </File>
           </Files>
         </Group>
@@ -820,14 +820,14 @@
               <FilePath>.\Src\audio.c</FilePath>
             </File>
             <File>
-              <FileName>son.asm</FileName>
-              <FileType>2</FileType>
-              <FilePath>.\Src\son.asm</FilePath>
-            </File>
-            <File>
               <FileName>callback.s</FileName>
               <FileType>2</FileType>
               <FilePath>.\Src\callback.s</FilePath>
+            </File>
+            <File>
+              <FileName>zip_unk.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>.\Src\zip_unk.s</FilePath>
             </File>
           </Files>
         </Group>
