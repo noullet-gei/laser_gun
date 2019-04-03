@@ -4,8 +4,30 @@
 
 #define GREEN_CPU
 
+extern int LongueurSon;
+extern int PeriodeSonMicroSec;
+extern short Son;
+
+// gamme temperee en Q15
+const static int coeff_detune[] = {
+//	52016,
+//	49096,
+//	46340,
+	43740,
+//	41285,
+	38967,
+//	36780,
+	34716,
+	32768,	// orig
+//	30929,
+	29193,
+//	27554,
+	26008 };
+
 unsigned int cnt10Hz = 0;
 int mode = 0;
+int freq = 0;
+int cheat_flag = 0;
 
 // durees exprimees en periode systick
 #define DUREE_LASER 1
@@ -18,22 +40,48 @@ void sys_callback( void )
 if	( cnt10Hz == DUREE_LASER )
 	{
 	gpio_laser_off();	// couper le laser apres 100ms
-	if	( mode >= 1 )
+	if	( mode == 1 )
 		{		// demarrer audio apres 100ms (delai de demarrage de l'ampli TS4990)
-		audio_init();
+		audio_init( &Son, LongueurSon, ( PeriodeSonMicroSec * coeff_detune[freq] ) >> 15 );
 		audio_start();
 		gpio_init_audio();
 		}
 	}
-if	( ( cnt10Hz >= DUREE_LOCK ) && ( !audio_is_playing() ) )
+if	( ( cnt10Hz >= DUREE_LOCK ) && ( !audio_is_playing() ) && ( !cheat_flag ) )
 	{
 	gpio_power_off();
 	}
-if	( cnt10Hz > 10 )	// clignoter, juste pour tester la mesure de temps
+if	( ( cnt10Hz == 20 ) && ( gpio_get_mode() == 2 ) )		// commencer en mode 2
 	{
-	int v = cnt10Hz & 1;
-	gpio_led( ROUGE, v ); gpio_led( VERT, v ^ 1 );
+	cheat_flag = 1; gpio_init_gate();
+	gpio_led( VERT, 1 );
 	}
+if	( ( cnt10Hz == 40 ) && ( cheat_flag ) )
+	{
+	gpio_led( VERT, 0 ); gpio_led( ROUGE, 1 );	// passer en mode 1
+	}
+if	( ( cnt10Hz == 50 ) && ( cheat_flag ) )
+	{
+	gpio_led( ROUGE, 0 );
+	if	( gpio_get_mode() == 1 )
+		gpio_led( VERT, 1 );
+	else	{
+		cheat_flag = 0; gpio_power_off();
+		}
+	}
+if	( ( cnt10Hz == 60 ) && ( cheat_flag ) )
+	{
+	gpio_led( VERT, 0 ); gpio_led( ROUGE, 1 );	// passer en mode 0
+	}
+if	( ( cnt10Hz == 70 ) && ( cheat_flag ) )
+	{
+	gpio_led( ROUGE, 0 );
+	if	( gpio_get_mode() == 0 )
+		gpio_laser_on();			// allumer le laser
+	else	gpio_power_off();
+	}
+if	( cnt10Hz == 360 )
+	gpio_power_off();
 }
 
 // arrondi optimal de N/D : ((2N/D)+1)/2
@@ -57,10 +105,10 @@ CLOCK_Configure();
 // Timer 2 CH3 en PWM
 gpio_init_modu();
 gpio_init_aux();
-int freq = gpio_get_freq();
+freq = gpio_get_freq();
 int resolution = PWM_Init_ff( TIM2, 3, periode_modu[freq] );
 TIM2->CCR3 = resolution / 2;	// a peu pres carre
-GPIO_Set( GPIOA, 9 );		// allumer le laser
+gpio_laser_on();		// allumer le laser
 		
 // Config System Timer, période exprimée en périodes horloge CPU (72 MHz)
 Systick_Period_ff( 72000000 / 10 );
