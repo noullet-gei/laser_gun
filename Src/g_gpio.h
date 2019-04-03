@@ -16,3 +16,7 @@ void gpio_init_aux( void );
 int gpio_get_freq(void);
 
 int gpio_get_mode(void);
+
+#define ROUGE 3
+#define VERT 4
+void gpio_led( int led, int val );

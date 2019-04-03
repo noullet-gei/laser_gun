@@ -92,10 +92,10 @@ GPIO_Configure(GPIOC, 4, OUTPUT, OUTPUT_PPULL);
 GPIO_Clear( GPIOC, 3 );
 GPIO_Clear( GPIOC, 4 );
 // config port PC12 pour LED verte Olimex
-GPIO_Configure( GPIOC, 12, OUTPUT, OUTPUT_PPULL );
-GPIO_Set( GPIOC, 12 );
-//config port PA0 pour bouton carre
-GPIO_Configure( GPIOA, 0, INPUT, INPUT_FLOATING );
+// GPIO_Configure( GPIOC, 12, OUTPUT, OUTPUT_PPULL );
+// GPIO_Set( GPIOC, 12 );
+// config port PA0 pour bouton carre
+// GPIO_Configure( GPIOA, 0, INPUT, INPUT_FLOATING );
 }
 
 int gpio_get_freq(void)
@@ -115,4 +115,12 @@ if	( !GPIO_Read(GPIOC, 0) ) return 0;
 if	( !GPIO_Read(GPIOC, 1) ) return 1;
 // if	( !GPIO_Read(GPIOC, 2) ) return 2;
 return 2;
+}
+
+// led = ROUGE ou VERT (3 ou 4)
+void gpio_led( int led, int val )
+{
+if	( val )
+	GPIO_Set( GPIOC, led );
+else	GPIO_Clear( GPIOC, led );
 }

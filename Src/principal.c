@@ -5,6 +5,7 @@
 #define GREEN_CPU
 
 unsigned int cnt10Hz = 0;
+int mode = 0;
 
 // durees exprimees en periode systick
 #define DUREE_LASER 1
@@ -15,10 +16,23 @@ void sys_callback( void )
 {
 ++cnt10Hz;
 if	( cnt10Hz == DUREE_LASER )
+	{
 	gpio_laser_off();	// couper le laser apres 100ms
+	if	( mode >= 1 )
+		{		// demarrer audio apres 100ms (delai de demarrage de l'ampli TS4990)
+		audio_init();
+		audio_start();
+		gpio_init_audio();
+		}
+	}
 if	( ( cnt10Hz >= DUREE_LOCK ) && ( !audio_is_playing() ) )
 	{
 	gpio_power_off();
+	}
+if	( cnt10Hz > 10 )	// clignoter, juste pour tester la mesure de temps
+	{
+	int v = cnt10Hz & 1;
+	gpio_led( ROUGE, v ); gpio_led( VERT, v ^ 1 );
 	}
 }
 
@@ -42,6 +56,7 @@ CLOCK_Configure();
 
 // Timer 2 CH3 en PWM
 gpio_init_modu();
+gpio_init_aux();
 int freq = gpio_get_freq();
 int resolution = PWM_Init_ff( TIM2, 3, periode_modu[freq] );
 TIM2->CCR3 = resolution / 2;	// a peu pres carre
@@ -55,15 +70,7 @@ Systick_Prio_IT( 3, sys_callback );
 SysTick_On;
 SysTick_Enable_IT;
 
-gpio_init_aux();
-
-int mode = gpio_get_mode();
-if	( mode >= 1 )
-	{
-	audio_init();
-	audio_start();
-	gpio_init_audio();
-	}
+mode = gpio_get_mode();
 
 while	(1)
 	{
