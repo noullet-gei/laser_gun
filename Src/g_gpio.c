@@ -1,4 +1,4 @@
-#include "gassp72.h"
+#include "gssp72.h"
 #include "g_gpio.h"
 
 // Configuration des E/S

@@ -390,11 +390,6 @@
               <FilePath>.\Src\principal.c</FilePath>
             </File>
             <File>
-              <FileName>gassp72.lib</FileName>
-              <FileType>4</FileType>
-              <FilePath>.\Src\gassp72.lib</FilePath>
-            </File>
-            <File>
               <FileName>g_gpio.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\Src\g_gpio.c</FilePath>
@@ -413,6 +408,31 @@
               <FileName>woui_pk.s</FileName>
               <FileType>2</FileType>
               <FilePath>.\Src\woui_pk.s</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>GSSP72</GroupName>
+          <Files>
+            <File>
+              <FileName>clock.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Src\GSSP72\clock.c</FilePath>
+            </File>
+            <File>
+              <FileName>GPIO.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Src\GSSP72\GPIO.c</FilePath>
+            </File>
+            <File>
+              <FileName>Timer_1234.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Src\GSSP72\Timer_1234.c</FilePath>
+            </File>
+            <File>
+              <FileName>Timer_Systick.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Src\GSSP72\Timer_Systick.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -805,11 +825,6 @@
               <FilePath>.\Src\principal.c</FilePath>
             </File>
             <File>
-              <FileName>gassp72.lib</FileName>
-              <FileType>4</FileType>
-              <FilePath>.\Src\gassp72.lib</FilePath>
-            </File>
-            <File>
               <FileName>g_gpio.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\Src\g_gpio.c</FilePath>
@@ -828,6 +843,31 @@
               <FileName>woui_pk.s</FileName>
               <FileType>2</FileType>
               <FilePath>.\Src\woui_pk.s</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>GSSP72</GroupName>
+          <Files>
+            <File>
+              <FileName>clock.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Src\GSSP72\clock.c</FilePath>
+            </File>
+            <File>
+              <FileName>GPIO.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Src\GSSP72\GPIO.c</FilePath>
+            </File>
+            <File>
+              <FileName>Timer_1234.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Src\GSSP72\Timer_1234.c</FilePath>
+            </File>
+            <File>
+              <FileName>Timer_Systick.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Src\GSSP72\Timer_Systick.c</FilePath>
             </File>
           </Files>
         </Group>
