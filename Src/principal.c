@@ -51,15 +51,19 @@ if	( ( cnt10Hz >= DUREE_LOCK ) && ( !audio_is_playing() ) && ( !cheat_flag ) )
 	{
 	gpio_power_off();
 	}
-if	( ( cnt10Hz == 20 ) && ( gpio_get_mode() == 2 ) )		// commencer en mode 2
+// cheat code zone
+// mettre mode sur M3, attendre 2s que LED verte s'allume, alors lacher gachette
+if	( ( cnt10Hz == 20 ) && ( gpio_get_mode() == 2 ) )
 	{
 	cheat_flag = 1; gpio_init_gate();
 	gpio_led( VERT, 1 );
 	}
+// mettre mode sur M2, attendre 2s que LED rouge s'allume
 if	( ( cnt10Hz == 40 ) && ( cheat_flag ) )
 	{
-	gpio_led( VERT, 0 ); gpio_led( ROUGE, 1 );	// passer en mode 1
+	gpio_led( VERT, 0 ); gpio_led( ROUGE, 1 );
 	}
+// attendre 1s que LED verte s'allume
 if	( ( cnt10Hz == 50 ) && ( cheat_flag ) )
 	{
 	gpio_led( ROUGE, 0 );
@@ -69,10 +73,12 @@ if	( ( cnt10Hz == 50 ) && ( cheat_flag ) )
 		cheat_flag = 0; gpio_power_off();
 		}
 	}
+// mettre mode sur M1, attendre 1s que LED rouge s'allume
 if	( ( cnt10Hz == 60 ) && ( cheat_flag ) )
 	{
 	gpio_led( VERT, 0 ); gpio_led( ROUGE, 1 );	// passer en mode 0
 	}
+// attendre 1s que LED rouge s'eteigne et laser s'allume pour 29s
 if	( ( cnt10Hz == 70 ) && ( cheat_flag ) )
 	{
 	gpio_led( ROUGE, 0 );

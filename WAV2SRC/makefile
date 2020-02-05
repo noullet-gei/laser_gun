@@ -3,7 +3,7 @@
 CCOPT = -Wall -O2
 C_SRC = wav_head.c appli.c
 CPP_SRC =
-EXE = wav2asm.exe
+EXE = wav2src.exe
 
 OBJS = $(C_SRC:.c=.o) $(CPP_SRC:.cpp=.o)
 
@@ -20,7 +20,7 @@ $(EXE) : $(OBJS)
 # other
 
 clean :
-	del *.o; del *.exe
+	rm *.o; rm *.exe
 
 # dependances : 
 wav_head.o : wav_head.h

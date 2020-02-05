@@ -15,7 +15,9 @@
 
 void usage()
 {
-fprintf( stderr, "\nUsage : wav2asm source.wav dest.s\n\n");
+fprintf( stderr,
+"\nUsage : wav2src source.wav dest.s -a # asm pour Keil (style CHTI)"
+"\n        wav2src source.wav dest.c -c # C non comprime\n");
 exit(1);
 }
 
@@ -88,6 +90,45 @@ close( s->hand );
 // printf("lu %d samples Ok\n", totalframes );
 }
 
+// Keil style ASM source code style CHTI
+void write_keil_asm( FILE * dfil, wavpars * s, float * mbuf )
+{
+fprintf( dfil, "\tAREA DonneeSon, DATA, READONLY\n");
+fprintf( dfil, "\texport LongueurSon\n");
+fprintf( dfil, "\texport PeriodeSonMicroSec\n");
+fprintf( dfil, "\texport Son\n");
+
+fprintf( dfil, "LongueurSon\tDCD\t%u\n", s->wavsize );
+fprintf( dfil, "PeriodeSonMicroSec\tDCD\t%d\n", (int)( round( 1000000.0/(double)s->freq ) ) );
+
+fprintf( dfil, "Son "); 
+// on a le son entier en mono dans mbuf[], convertissons le en ASM "Keil"
+for	( int i = 0; i < s->wavsize; ++i )
+	{
+	fprintf( dfil, "\tdcw\t%d\n", (int)floor(32768.0*mbuf[i]) );
+	}
+fprintf( dfil, "\tend\n"); 
+}
+
+// C source code style CHTI
+void write_sl16_c( FILE * dfil, wavpars * s, float * mbuf )
+{
+fprintf( dfil, "const unsigned int LongueurSon = %u;\n", s->wavsize );
+fprintf( dfil, "const unsigned int PeriodeSonMicroSec = %d;\n", (int)( round( 1000000.0/(double)s->freq ) ) );
+
+fprintf( dfil, "const short Son[] = {\n"); 
+// on a le son entier en mono dans mbuf[], convertissons le en C
+int i;
+for	( i = 0; i < ( s->wavsize - 1 ); ++i )
+	{
+	fprintf( dfil, "%d, ", (int)floor(32768.0*mbuf[i]) );
+	if	( ( i % 8 ) == 7 )
+		fprintf( dfil, "\n" );
+	}
+// dernier element sans la virgule
+fprintf( dfil, "%d };\n", (int)floor(32768.0*mbuf[i]) );
+}
+
 int main( int argc, char ** argv )
 {
 wavpars s;
@@ -96,7 +137,7 @@ char dnam[256];
 FILE * dfil;
 float * mbuf;
 
-if ( argc != 3 ) usage();
+if ( argc != 4 ) usage();
 
 sprintf( snam, "%s", argv[1] );
 sprintf( dnam, "%s", argv[2] );
@@ -106,33 +147,22 @@ s.hand = open( snam, O_RDONLY | O_BINARY );
 if ( s.hand == -1 ) gasp("not found");
 
 WAVreadHeader( &s );
+wave_read_body_mono( &s, &mbuf );
 
-printf("%d echantillons par canal, duree %gs\n", (int)s.wavsize, (double)s.wavsize / (double)s.freq );
+printf("%u ech. @ %u Hz, duree %g s\n", s.wavsize, s.freq, (double)s.wavsize / (double)s.freq );
 
 printf("ouverture %s en ecriture\n", dnam );
 dfil = fopen( dnam, "w" );
 if ( dfil == NULL ) gasp("pb ouverture pour ecrire");
 
-// Keil style ASM source code
-fprintf( dfil, "\tAREA DonneeSon, DATA, READONLY\n");
-fprintf( dfil, "\texport LongueurSon\n");
-fprintf( dfil, "\texport PeriodeSonMicroSec\n");
-fprintf( dfil, "\texport Son\n");
-
-fprintf( dfil, "LongueurSon\tDCD\t%u\n", s.wavsize );
-fprintf( dfil, "PeriodeSonMicroSec\tDCD\t%d\n", (int)( round( 1000000.0/(double)s.freq ) ) );
-
-fprintf( dfil, "Son "); 
-
-wave_read_body_mono( &s, &mbuf );
-
-// on a le son entier en mono dans fbuf[], convertissons le en ASM "Keil"
-for	( int i = 0; i < s.wavsize; ++i )
+// ici on choisit le format de sortie
+switch	( argv[3][1] )
 	{
-	fprintf( dfil, "\tdcw\t%d\n", (int)floor(32768.0*mbuf[i]) );
+	case 'a' : write_keil_asm( dfil, &s, mbuf ); break;
+	case 'c' : write_sl16_c( dfil, &s, mbuf ); break;
+	default : usage();
 	}
 
-fprintf( dfil, "\tend\n"); 
 fclose( dfil );
 close( s.hand );
 return 0;

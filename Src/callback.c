@@ -1,20 +1,33 @@
+#include "stm32f10x.h"
+#include "etat.h"
+
+extern type_etat etat;
+
+// traduction en C de l'ASM Keil ci-dessous
+// verifier que le code desassemble n'est pas plus gros...
+// Keil : Ok avec -O2 et -O3
+void sample_callbak( void )
+{
+unsigned int pos = etat.position;
+unsigned int tai = etat.taille;
+int sample;
+if	( pos >= tai )
+	sample = 0;
+else	sample = (int)((short *)(etat.son))[pos++];
+etat.position = pos;
+// il reste a convertir sample au format PWM
+sample += 0x8000; // il devient positif
+sample *= etat.resolution;
+sample >>= 16;
+TIM3->CCR3 = sample;
+}
+
+/*
 	thumb
 	area	moncode, code, readonly
-
 TIM3_CCR3	equ	0x4000043C	; PWM
-
 	include etat.inc
 	import	etat
-
-; typedef struct {
-; int position;		// 0
-; int taille;		// 4
-; void * son		// 8
-; int resolution;	// 12
-; int periode_ticks;	// 16
-; } type_etat;
-
-
 	export	sample_callbak
 
 sample_callbak proc
@@ -41,7 +54,6 @@ reso	add	r0, #0x00008000	; passer sample en positif
 ;
 silence	mov	r0, #0		; silence (signe)
 	b	reso
-
 	endp
-
 	end
+*/
