@@ -1,19 +1,18 @@
 #include "gssp72.h"
-#include "etat.h"
 #include "audio.h"
 
 void sample_callbak( void );
 
 type_etat etat;
 
-void audio_init( short * pson, int long_son, int periode_usec )
+void audio_init( const type_son * zesound )
 {
-etat.taille = long_son;
+etat.taille = zesound->longson;
 etat.position = etat.taille;
-etat.son = pson;
+etat.son = (void *)zesound->son;
 
 // 1 tick (periode d'horloge) = 1/72 microseconde
-etat.periode_ticks = periode_usec * 72;
+etat.periode_ticks = zesound->periodus * 72;
 
 int periode_PWM_ticks;
 
@@ -25,9 +24,9 @@ int periode_PWM_ticks;
 // on tente successivement les multiples 1, 2 et 3
 periode_PWM_ticks = etat.periode_ticks;
 if	( periode_PWM_ticks > (72000000/20000) )
-	periode_PWM_ticks = periode_usec * (72/2);
+	periode_PWM_ticks = zesound->periodus * (72/2);
 if	( periode_PWM_ticks > (72000000/20000) )
-	periode_PWM_ticks = periode_usec * (72/3);
+	periode_PWM_ticks = zesound->periodus * (72/3);
 etat.resolution = PWM_Init_ff( TIM3, 3, periode_PWM_ticks );
 
 // le timer pour l'interruption audio

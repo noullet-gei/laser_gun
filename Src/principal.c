@@ -4,11 +4,7 @@
 
 #define GREEN_CPU
 
-extern int LongueurSon;
-extern int PeriodeSonMicroSec;
-extern short Son;
-
-// gamme temperee en Q15
+/* gamme temperee en Q15
 const static int coeff_detune[] = {
 //	52016,
 //	49096,
@@ -23,7 +19,7 @@ const static int coeff_detune[] = {
 	29193,
 //	27554,
 	26008 };
-
+*/
 unsigned int cnt10Hz = 0;
 int mode = 0;
 int freq = 0;
@@ -42,7 +38,14 @@ if	( cnt10Hz == DUREE_LASER )
 	gpio_laser_off();	// couper le laser apres 100ms
 	if	( mode == 1 )
 		{		// demarrer audio apres 100ms (delai de demarrage de l'ampli TS4990)
-		audio_init( &Son, LongueurSon, ( PeriodeSonMicroSec * coeff_detune[freq] ) >> 15 );
+		switch	( freq )
+			{
+			case 0 : audio_init( &woui_pk ); break;
+			case 1 : audio_init( &to_poing ); break;
+			case 2 : audio_init( &zip_unk ); break;
+			case 3 : audio_init( &zip_unk ); break;
+			default : audio_init( &woui_pk );
+			}
 		audio_start();
 		gpio_init_audio();
 		}

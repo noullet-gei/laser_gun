@@ -1,6 +1,10 @@
-const unsigned int LongueurSon = 2673;
-const unsigned int PeriodeSonMicroSec = 91;
-const short Son[] = {
+#include "../audio.h"
+#ifdef USE_woui_pk
+/* pour utiliser ce son, declarer :
+#define USE_woui_pk
+extern const type_son woui_pk;
+*/
+static const short leson[] = {
 0, -44, 253, 500, 930, 1869, 2916, 4217, 
 4379, 2309, -1495, -6178, -9301, -9419, -7243, -3945, 
 -2283, -1367, 2457, 8901, 16658, 19300, 13117, 1041, 
@@ -336,3 +340,5 @@ const short Son[] = {
 -8201, -6353, -2562, -3265, -1852, -2001, -2713, -1611, 
 -1243, -871, -327, 69, -227, 8, -782, -1314, 
 -945 };
+const type_son woui_pk = { .longson=2673, .periodus=91, .son=leson };	// style C99
+#endif

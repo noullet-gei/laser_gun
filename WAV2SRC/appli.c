@@ -17,7 +17,8 @@ void usage()
 {
 fprintf( stderr,
 "\nUsage : wav2src source.wav dest.s -a # asm pour Keil (style CHTI)"
-"\n        wav2src source.wav dest.c -c # C non comprime\n");
+"\n        wav2src source.wav dest.c -c # C non comprime compatible CHTI"
+"\n        wav2src source.wav dest.c -n # C non comprime , struct nommee pour multi-son");
 exit(1);
 }
 
@@ -129,6 +130,34 @@ for	( i = 0; i < ( s->wavsize - 1 ); ++i )
 fprintf( dfil, "%d };\n", (int)floor(32768.0*mbuf[i]) );
 }
 
+// C source code avec struct nommee pour multi-son
+void write_sl16_nom_c( FILE * dfil, wavpars * s, float * mbuf, char * nom )
+{
+
+fprintf( dfil, "#include \"../audio.h\"\n" );
+fprintf( dfil, "#ifdef USE_%s\n", nom );
+fprintf( dfil, "/* pour utiliser ce son, declarer :\n" );
+fprintf( dfil, "#define USE_%s\n", nom );
+fprintf( dfil, "extern const type_son %s;\n", nom );
+fprintf( dfil, "*/\n" );
+fprintf( dfil, "static const short leson[] = {\n"); 
+// on a le son entier en mono dans mbuf[], convertissons le en C
+int i;
+for	( i = 0; i < ( s->wavsize - 1 ); ++i )
+	{
+	fprintf( dfil, "%d, ", (int)floor(32768.0*mbuf[i]) );
+	if	( ( i % 8 ) == 7 )
+		fprintf( dfil, "\n" );
+	}
+// dernier element sans la virgule
+fprintf( dfil, "%d };\n", (int)floor(32768.0*mbuf[i]) );
+// la structure, enfin
+fprintf( dfil, "const type_son %s = { .longson=%u, .periodus=%u, .son=leson };	// style C99\n",
+		nom, s->wavsize, (int)( round( 1000000.0/(double)s->freq ) ) );
+fprintf( dfil, "#endif\n");
+}
+
+
 int main( int argc, char ** argv )
 {
 wavpars s;
@@ -160,6 +189,13 @@ switch	( argv[3][1] )
 	{
 	case 'a' : write_keil_asm( dfil, &s, mbuf ); break;
 	case 'c' : write_sl16_c( dfil, &s, mbuf ); break;
+	case 'n' :
+		{	// extraire le prenom du son
+		for	( int i = 1; i < strlen(dnam); ++i )
+			if	( dnam[i] == '.' )
+				dnam[i] = 0;
+		write_sl16_nom_c( dfil, &s, mbuf, dnam );
+		} break;
 	default : usage();
 	}
 
