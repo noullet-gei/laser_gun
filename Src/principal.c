@@ -1,6 +1,7 @@
 #include "gssp72.h"
 #include "g_gpio.h"
 #include "audio.h"
+#include "flashy.h"
 
 #define GREEN_CPU
 
@@ -141,6 +142,91 @@ switch	( cheat_stat )
 		else	gpio_power_off();
 		}
 	break;
+	// le niveau de la frequence 2 : les 200
+	case 200 :
+		{		// effacement
+		cheat_stat++;
+		cheat_tt += 10;
+		gpio_led( VERT, 0 ); gpio_led( ROUGE, 1 );
+		flashy_unlock();
+		flashy_page_erase( LAST_FLASH_PAGE );	// derniere page
+		gpio_led( ROUGE, 0 );
+		}
+	break;
+	case 201 :
+		{
+		cheat_stat++;
+		cheat_tt += 3;
+		gpio_led( VERT, 1 ); gpio_led( ROUGE, 1 );
+		}
+	break;
+	// le niveau de la frequence 3 : les 300
+	case 300 :
+		{		// lecture
+		short x;
+		cheat_stat++;
+		cheat_tt += 10;
+		x = ((short int *)LAST_FLASH_PAGE)[0];
+		gpio_led( VERT, x & 1 ); gpio_led( ROUGE, ( x >> 1 ) & 1 );
+		audio_init( &to_poing ); audio_start(); gpio_init_audio();
+		}
+	break;
+	case 301 :
+		{
+		short x;
+		cheat_stat++;
+		cheat_tt += 10;
+		x = ((short int *)LAST_FLASH_PAGE)[1];
+		gpio_led( VERT, x & 1 ); gpio_led( ROUGE, ( x >> 1 ) & 1 );
+		audio_init( &woui_pk ); audio_start(); gpio_init_audio();
+		}
+	break;
+	case 302 :
+		{
+		cheat_stat++;
+		cheat_tt += 3;
+		gpio_led( VERT, 1 ); gpio_led( ROUGE, 1 );
+		}
+	break;
+	// le niveau de la frequence 4 : les 400
+	case 400 :
+		{		// ecriture
+		cheat_stat++;
+		cheat_tt += 10;
+		gpio_led( VERT, 0 ); gpio_led( ROUGE, 1 );
+		flashy_unlock();
+		flashy_write_short( LAST_FLASH_PAGE, 1 );
+		flashy_write_short( LAST_FLASH_PAGE+2, 3 );
+		gpio_led( ROUGE, 0 );
+		}
+	break;
+	case 401 :
+		{
+		cheat_stat++;
+		cheat_tt += 3;
+		gpio_led( VERT, 1 ); gpio_led( ROUGE, 1 );
+		}
+	break;
+	// le niveau de la frequence 5 : les 500
+	case 500 :
+		{		// ecriture
+		cheat_stat++;
+		cheat_tt += 10;
+		gpio_led( VERT, 0 ); gpio_led( ROUGE, 1 );
+		flashy_unlock();
+		flashy_write_short( LAST_FLASH_PAGE, 2 );
+		flashy_write_short( LAST_FLASH_PAGE+2, 0 );
+		gpio_led( ROUGE, 0 );
+		}
+	break;
+	case 501 :
+		{
+		cheat_stat++;
+		cheat_tt += 3;
+		gpio_led( VERT, 1 ); gpio_led( ROUGE, 1 );
+		}
+	break;
+
 	default :
 		cheat_stat = 0; gpio_power_off();
 	}

@@ -404,6 +404,11 @@
               <FileType>1</FileType>
               <FilePath>.\Src\callback.c</FilePath>
             </File>
+            <File>
+              <FileName>flashy.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Src\flashy.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -853,6 +858,11 @@
               <FileName>callback.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\Src\callback.c</FilePath>
+            </File>
+            <File>
+              <FileName>flashy.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Src\flashy.c</FilePath>
             </File>
           </Files>
         </Group>
