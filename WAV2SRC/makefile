@@ -1,7 +1,7 @@
 # makefile pour MinGW
 
 CCOPT = -Wall -O2
-C_SRC = wav_head.c appli.c
+C_SRC = wav_head.c codec.c appli.c
 CPP_SRC =
 EXE = wav2src.exe
 
@@ -24,4 +24,5 @@ clean :
 
 # dependances : 
 wav_head.o : wav_head.h
-appli.o : wav_head.h
+appli.o : wav_head.h codec.h
+codec.o : codec.h

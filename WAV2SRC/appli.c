@@ -11,14 +11,17 @@
 #include <math.h>
 
 #include "wav_head.h"
+#include "codec.h"
 
 
 void usage()
 {
 fprintf( stderr,
-"\nUsage : wav2src source.wav dest.s -a # asm pour Keil (style CHTI)"
-"\n        wav2src source.wav dest.c -c # C non comprime compatible CHTI"
-"\n        wav2src source.wav dest.c -n # C non comprime , struct nommee pour multi-son");
+"\nUsage : wav2src source.wav dest.s -a   # asm pour Keil (style CHTI)"
+"\n        wav2src source.wav dest.c -c   # C non comprime compatible CHTI"
+"\n        wav2src source.wav dest.c -n   # C non comprime , struct nommee"
+"\n        wav2src source.wav dest.wav -w # test compression"
+"\n        wav2src source.wav dest.c -z   # C comprime, 11025 Hz");
 exit(1);
 }
 
@@ -157,6 +160,46 @@ fprintf( dfil, "const type_son %s = { .longson=%u, .periodus=%u, .son=leson };	/
 fprintf( dfil, "#endif\n");
 }
 
+// WAV file pour test compression-decompression
+void write_codec_wav( wavpars * s, float * mbuf, const char * fnam )
+{
+unsigned int qsamp = s->wavsize;
+// buffer pour recevoir le son comprime
+unsigned short * cbuf = (unsigned short *)malloc( qsamp * sizeof(short) );
+mbuf[0] = 0.0;	// precaution pour eviter offset au depart
+// compression precedee de mise a l'echelle target_p
+codec_init();
+unsigned int i;
+for	( i = 0; i < qsamp; ++i )
+	cbuf[i] = encode( mbuf[i] * ((float)target_p) );
+// decompression suivie de mise a l'echelle wav32
+codec_init();
+for	( i = 0; i < qsamp; ++i )
+	mbuf[i] = ((float)decode( cbuf[i] )) / ((float)target_p);
+codec_dump();
+// ecriture fichier
+int resol = 32;
+s->type = (resol==32)?(3):(1);
+s->chan = 1;
+// s->freq // no change 
+s->resol = resol;
+// s->wavsize // no change
+// block et bpsec seront calcules par WAVwriteHeader
+s->hand = open( fnam, O_RDWR | O_BINARY | O_CREAT | O_TRUNC, 0666 );
+if	( s->hand == -1 )
+	gasp("echec ouverture ecriture %s", fnam );
+WAVwriteHeader( s );
+int bytecnt, writecnt;
+bytecnt = s->wavsize * ((resol==32)?(sizeof(float)):(sizeof(short)));
+writecnt = write( s->hand, mbuf, bytecnt );
+if	( writecnt != bytecnt )
+	gasp("erreur ecriture %s", fnam );
+close( s->hand );
+printf("source %u ech. @ %u Hz, duree %g s\n", s->wavsize, s->freq, (double)s->wavsize / (double)s->freq );
+unsigned int qbytes = ((s->wavsize*QBIT)/8)+1;
+printf("codage %d bits soit %u bytes = %g kbytes\n", QBIT, qbytes, ((double)qbytes)/1024.0 );
+}
+
 
 int main( int argc, char ** argv )
 {
@@ -177,12 +220,17 @@ if ( s.hand == -1 ) gasp("not found");
 
 WAVreadHeader( &s );
 wave_read_body_mono( &s, &mbuf );
+close( s.hand );
 
 printf("%u ech. @ %u Hz, duree %g s\n", s.wavsize, s.freq, (double)s.wavsize / (double)s.freq );
 
-printf("ouverture %s en ecriture\n", dnam );
-dfil = fopen( dnam, "w" );
-if ( dfil == NULL ) gasp("pb ouverture pour ecrire");
+if	( argv[3][1] != 'w' )
+	{
+	printf("ouverture %s en ecriture\n", dnam );
+	dfil = fopen( dnam, "w" );
+	if ( dfil == NULL ) gasp("pb ouverture pour ecrire");
+	}
+else	dfil = NULL;
 
 // ici on choisit le format de sortie
 switch	( argv[3][1] )
@@ -196,11 +244,12 @@ switch	( argv[3][1] )
 				dnam[i] = 0;
 		write_sl16_nom_c( dfil, &s, mbuf, dnam );
 		} break;
+	case 'w' : write_codec_wav( &s, mbuf, dnam ); break;
 	default : usage();
 	}
 
-fclose( dfil );
-close( s.hand );
+if	( dfil )
+	fclose( dfil );
 return 0;
 }
 
