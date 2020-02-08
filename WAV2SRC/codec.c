@@ -1,6 +1,7 @@
 /** compression predictive avec perte */
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "codec.h"
 
 
@@ -91,17 +92,6 @@ printf("\t%g -> %u -> %d\n", v, u, dequant[u] );
 
 // decodeur
 
-/*
-int dequant( unsigned short code )
-{
-unsigned int mag = code & codemagmask;
-unsigned int sgn = code & codesgnmask;
-if	( mag >= QLIN )
-	mag = ddi[mag-QLIN];
-return (sgn?(-((int)mag)):((int)mag));
-}
-*/
-
 int decode( unsigned short code )
 {
 int retval = oldsig_d + dequant[code];
@@ -143,4 +133,101 @@ oldsig_e = (float)decode( retval );
 return retval;
 }
 
+// niveau buffer entier
 
+// comprimer et packer l'audio fourni dans mbuf (float normalise -1.0;1.0)
+// alloue la memoire pour wbuf, rend la taille de wbuf en unsigned int
+int compress2w32( unsigned int qsamp, float * mbuf, unsigned int ** pwbuf )
+{
+// preparation buffer pour packing des codes comprimes
+unsigned qw32 = qsamp * QBIT;
+qw32 = ( ( qw32 - 1 ) / 32 ) + 1;
+unsigned int * wbuf = (unsigned int *)malloc( qw32 * sizeof(int) );
+if	( wbuf == NULL )
+	return -1;
+// variables pour packing
+unsigned int ic;	// indice du code
+unsigned int iw;	// indice du word
+unsigned int pb0;	// position du lsb du code courant dans le word courant
+unsigned int zecode;	// code courant
+unsigned int zew;	// word courant
+// compression precedee de mise a l'echelle target_p
+// packing des codes de QBIT bits dans des mots de 32 bits
+mbuf[0] = 0.0;	// precaution pour eviter offset au depart
+codec_init();
+iw = 0; zew = 0; pb0 = 0;
+for	( ic = 0; ic < qsamp; ++ic )
+	{
+	zecode = (unsigned int)encode( mbuf[ic] * ((float)target_p) );
+	zew |= ( zecode << pb0 );
+	pb0 += QBIT;
+	if	( pb0 >= 32 )
+		{			// passer au word suivant
+		if	( iw >= qw32 )	// precaution
+			break;
+		wbuf[iw++] = zew;
+		pb0 -= 32;
+		if	( pb0 > 0 )	// traiter residu
+			zew = ( zecode >> ( QBIT - pb0 ) );
+		else	zew = 0;
+		}
+	}
+// sauver dernier mot inacheve s'il y en a
+if	( ( pb0 > 0 ) && ( iw < qw32 ) )
+	wbuf[iw++] = zew;
+if	( ( iw != qw32 ) || ( ic != qsamp ) )
+	{
+	printf("erreur packing iw=%u vs %u, ic=%u vs %u\n", iw, qw32, ic, qsamp );
+	return -2;
+	}
+*pwbuf = wbuf;
+return (int)qw32;
+}
+
+// depacker et decomprimer l'audio fourni dans wbuf (unsigned int)
+// alloue la memoire pour mbuf (float normalise -1.0;1.0)
+int uncompress2float( unsigned int qsamp, float ** pmbuf, unsigned int * wbuf, unsigned int qwbuf )
+{
+// preparation buffer pour audio decomprime
+float * mbuf = (float *)malloc( qsamp * sizeof(float) );
+if	( mbuf == NULL )
+	return -1;
+// calcul taille buffer w32 pour verif
+unsigned qw32 = qsamp * QBIT;
+qw32 = ( ( qw32 - 1 ) / 32 ) + 1;
+if	( qw32 != qwbuf )
+	return -3;
+// variables pour unpacking
+unsigned int ic;	// indice du code
+unsigned int iw;	// indice du word
+unsigned int pb0;	// position du lsb du code courant dans le word courant
+unsigned int zecode;	// code courant
+unsigned int zew;	// word courant
+// extraction et decompression des codes de QBIT bits des mots de 32 bits
+codec_init();
+iw = 0; zew = 0; pb0 = 0;
+zew = wbuf[iw++];
+for	( ic = 0; ic < qsamp; ++ic )
+	{
+	zecode = ( zew >> pb0 );
+	pb0 += QBIT;
+	if	( pb0 >= 32 )
+		{			// passer au word suivant
+		if	( iw >= qw32 )	// precaution
+			break;
+		zew = wbuf[iw++];
+		pb0 -= 32;
+		if	( pb0 > 0 )	// traiter residu
+			zecode |= ( zew << ( QBIT - pb0 ) ); 
+		}
+	zecode &= ( ( 1 << QBIT ) - 1 );
+	mbuf[ic] = ((float)decode( zecode )) / ((float)target_p);
+	}
+if	( ( iw != qw32 ) || ( ic != qsamp ) )
+	{
+	printf("erreur depacking iw=%u vs %u, ic=%u vs %u\n", iw, qw32, ic, qsamp );
+	return -2;
+	}
+*pmbuf = mbuf;
+return 0;
+}

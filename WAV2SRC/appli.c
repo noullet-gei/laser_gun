@@ -21,7 +21,9 @@ fprintf( stderr,
 "\n        wav2src source.wav dest.c -c   # C non comprime compatible CHTI"
 "\n        wav2src source.wav dest.c -n   # C non comprime , struct nommee"
 "\n        wav2src source.wav dest.wav -w # test compression"
-"\n        wav2src source.wav dest.c -z   # C comprime, 11025 Hz");
+"\n        wav2src source.wav dest.c -z   # C comprime, 11025 Hz\n\n");
+codec_init();
+codec_dump();
 exit(1);
 }
 
@@ -160,23 +162,30 @@ fprintf( dfil, "const type_son %s = { .longson=%u, .periodus=%u, .son=leson };	/
 fprintf( dfil, "#endif\n");
 }
 
-// WAV file pour test compression-decompression
+// production WAV file pour test auditif compression-decompression
+// le fichier source est deja lu dans mbuf
+// le fichier dest est a creer
 void write_codec_wav( wavpars * s, float * mbuf, const char * fnam )
 {
+printf("source %u ech. @ %u Hz, duree %g s\n", s->wavsize, s->freq, (double)s->wavsize / (double)s->freq );
 unsigned int qsamp = s->wavsize;
-// buffer pour recevoir le son comprime
-unsigned short * cbuf = (unsigned short *)malloc( qsamp * sizeof(short) );
-mbuf[0] = 0.0;	// precaution pour eviter offset au depart
-// compression precedee de mise a l'echelle target_p
-codec_init();
-unsigned int i;
-for	( i = 0; i < qsamp; ++i )
-	cbuf[i] = encode( mbuf[i] * ((float)target_p) );
-// decompression suivie de mise a l'echelle wav32
-codec_init();
-for	( i = 0; i < qsamp; ++i )
-	mbuf[i] = ((float)decode( cbuf[i] )) / ((float)target_p);
-codec_dump();
+unsigned int * wbuf;	// buffer pour audio comprime
+int retval;
+// comprimer et packer l'audio fourni dans mbuf (float normalise -1.0;1.0)
+// alloue la memoire pour wbuf, rend la taille de wbuf en unsigned int
+retval = compress2w32( qsamp, mbuf, &wbuf );
+if	( retval <= 0 )
+	gasp("echec compress2w32 : %d", retval );
+unsigned int qw32 = (unsigned int)retval;
+printf("compression effectuee : %u words de 32 bits\n", qw32 );
+unsigned int qbytes = ((s->wavsize*QBIT)/8)+1;
+printf("codage %d bits soit %u bytes = %g kbytes\n", QBIT, qbytes, ((double)qbytes)/1024.0 );
+// depacker et decomprimer l'audio fourni dans wbuf (unsigned int)
+// alloue la memoire pour mbuf (float normalise -1.0;1.0)
+float * mbuf2;
+retval = uncompress2float( qsamp, &mbuf2, wbuf, qw32 );
+if	( retval < 0 )
+	gasp("echec uncompress2float : %d", retval );
 // ecriture fichier
 int resol = 32;
 s->type = (resol==32)?(3):(1);
@@ -191,13 +200,11 @@ if	( s->hand == -1 )
 WAVwriteHeader( s );
 int bytecnt, writecnt;
 bytecnt = s->wavsize * ((resol==32)?(sizeof(float)):(sizeof(short)));
-writecnt = write( s->hand, mbuf, bytecnt );
+writecnt = write( s->hand, mbuf2, bytecnt );
 if	( writecnt != bytecnt )
 	gasp("erreur ecriture %s", fnam );
 close( s->hand );
-printf("source %u ech. @ %u Hz, duree %g s\n", s->wavsize, s->freq, (double)s->wavsize / (double)s->freq );
-unsigned int qbytes = ((s->wavsize*QBIT)/8)+1;
-printf("codage %d bits soit %u bytes = %g kbytes\n", QBIT, qbytes, ((double)qbytes)/1024.0 );
+printf("fini ecriture %s\n", fnam );
 }
 
 
