@@ -411,7 +411,7 @@
       <GroupNumber>1</GroupNumber>
       <FileNumber>2</FileNumber>
       <FileType>1</FileType>
-      <tvExp>1</tvExp>
+      <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
       <PathWithFileName>.\Src\principal.c</PathWithFileName>
@@ -450,8 +450,8 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>.\Src\callback.c</PathWithFileName>
-      <FilenameWithoutPath>callback.c</FilenameWithoutPath>
+      <PathWithFileName>.\Src\flashy.c</PathWithFileName>
+      <FilenameWithoutPath>flashy.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
     </File>
@@ -459,11 +459,11 @@
       <GroupNumber>1</GroupNumber>
       <FileNumber>6</FileNumber>
       <FileType>1</FileType>
-      <tvExp>1</tvExp>
+      <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>.\Src\flashy.c</PathWithFileName>
-      <FilenameWithoutPath>flashy.c</FilenameWithoutPath>
+      <PathWithFileName>.\Src\dequant.c</PathWithFileName>
+      <FilenameWithoutPath>dequant.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
     </File>

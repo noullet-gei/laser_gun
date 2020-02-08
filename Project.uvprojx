@@ -400,14 +400,14 @@
               <FilePath>.\Src\audio.c</FilePath>
             </File>
             <File>
-              <FileName>callback.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\Src\callback.c</FilePath>
-            </File>
-            <File>
               <FileName>flashy.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\Src\flashy.c</FilePath>
+            </File>
+            <File>
+              <FileName>dequant.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Src\dequant.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -855,14 +855,14 @@
               <FilePath>.\Src\audio.c</FilePath>
             </File>
             <File>
-              <FileName>callback.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\Src\callback.c</FilePath>
-            </File>
-            <File>
               <FileName>flashy.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\Src\flashy.c</FilePath>
+            </File>
+            <File>
+              <FileName>dequant.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Src\dequant.c</FilePath>
             </File>
           </Files>
         </Group>

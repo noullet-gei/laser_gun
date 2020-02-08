@@ -55,11 +55,11 @@ if	( cnt10Hz == DUREE_LASER )
 		{		// demarrer audio apres 100ms (delai de demarrage de l'ampli TS4990)
 		switch	( freq )
 			{
-			case 0 : audio_init( &woui_pk ); break;
-			case 1 : audio_init( &to_poing ); break;
-			case 2 : audio_init( &zip_unk ); break;
-			case 3 : audio_init( &zip_unk ); break;
-			default : audio_init( &woui_pk );
+			case 0 : audio_init( woui_pk ); break;
+			case 1 : audio_init( to_poing ); break;
+			case 2 : audio_init( zip_unk ); break;
+			case 3 : audio_init( zip_unk ); break;
+			default : audio_init( woui_pk );
 			}
 		audio_start();
 		gpio_init_audio();
@@ -168,7 +168,7 @@ switch	( cheat_stat )
 		cheat_tt += 10;
 		x = ((short int *)LAST_FLASH_PAGE)[0];
 		gpio_led( VERT, x & 1 ); gpio_led( ROUGE, ( x >> 1 ) & 1 );
-		audio_init( &to_poing ); audio_start(); gpio_init_audio();
+		audio_init( to_poing ); audio_start(); gpio_init_audio();
 		}
 	break;
 	case 301 :
@@ -178,7 +178,7 @@ switch	( cheat_stat )
 		cheat_tt += 10;
 		x = ((short int *)LAST_FLASH_PAGE)[1];
 		gpio_led( VERT, x & 1 ); gpio_led( ROUGE, ( x >> 1 ) & 1 );
-		audio_init( &woui_pk ); audio_start(); gpio_init_audio();
+		audio_init( woui_pk ); audio_start(); gpio_init_audio();
 		}
 	break;
 	case 302 :

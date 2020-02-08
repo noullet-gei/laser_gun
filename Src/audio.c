@@ -1,46 +1,70 @@
 #include "gssp72.h"
 #include "audio.h"
 
-void sample_callbak( void );
-
 type_etat etat;
 
-void audio_init( const type_son * zesound )
+// interrupt audio
+void sample_callbak( void )
 {
-etat.taille = zesound->longson;
-etat.position = etat.taille;
-etat.son = (void *)zesound->son;
+int pos = etat.pos;
+if	( pos < 0 )
+	TIM3->CCR3 = PWM_SILENCE;
+else	{
+	// extraire le code du buffer
+	unsigned short pb0 = etat.pb0;
+	unsigned short zecode = ( etat.zew >> pb0 );
+	pb0 += QBIT;
+	if	( pb0 >= 32 )
+		{			// passer au word suivant
+		etat.zew = etat.wbuf1[etat.iw++];
+		pb0 -= 32; etat.pb0 = pb0;
+		if	( pb0 > 0 )	// traiter residu
+			zecode |= ( etat.zew << ( QBIT - pb0 ) ); 
+		}
+	zecode &= ( ( 1 << QBIT ) - 1 );
+	// decoder le sample
+	short sig = etat.oldsig + dequant[zecode];
+	etat.oldsig = sig;
+	TIM3->CCR3 = sig;
+	// avancer le compteur
+	pos++;
+	if	( pos >= etat.tai )
+		pos = -1;
+	etat.pos = pos;
+	}
+}
 
-// 1 tick (periode d'horloge) = 1/72 microseconde
-etat.periode_ticks = zesound->periodus * 72;
-
-int periode_PWM_ticks;
+// leson est l'adresse d'un tableau dont le premier element est la taille du son
+// la suite contient les codes entasses dans des mots de 32 bits
+void audio_init( const unsigned int * leson )
+{
+etat.tai = leson[0];		// nombre de samples du son
+etat.wbuf1 = leson + 1;		// pack de codes
+etat.pos = -1;			// position en samples (-1 = stop)
+etat.iw = 0;			// indice du word (32 bits)
+etat.pb0 = 0;			// position du lsb du code courant dans le word courant	
+etat.zew = etat.wbuf1[0];	// word courant
+etat.oldsig = 0;		// predicteur
 
 // le timer pour la source PWM (ch. 3 pour TIM3-CH3)
 // la frequence PWM doit
 //	1) etre egale ou multiple de la frequence d'echantillonnage du son
 //	2) assez elevee pour ne pas etre audible ( > 20 kHz )
 //	3) pas trop elevee pour ne pas degrader la resolution 
-// on tente successivement les multiples 1, 2 et 3
-periode_PWM_ticks = etat.periode_ticks;
-if	( periode_PWM_ticks > (72000000/20000) )
-	periode_PWM_ticks = zesound->periodus * (72/2);
-if	( periode_PWM_ticks > (72000000/20000) )
-	periode_PWM_ticks = zesound->periodus * (72/3);
-etat.resolution = PWM_Init_ff( TIM3, 3, periode_PWM_ticks );
+PWM_Init_ff( TIM3, 3, PWM_PERIOD );
 
 // le timer pour l'interruption audio
-Timer_1234_Init_ff( TIM4, etat.periode_ticks );
+Timer_1234_Init_ff( TIM4, SAMP_PERIOD );
 Active_IT_Debordement_Timer( TIM4, 2, sample_callbak );
 Run_Timer( TIM4 );
 }
 
 void audio_start()
 {
-etat.position = 0;
+etat.pos = 0;
 }
 
 int audio_is_playing()
 {
-return ( etat.position < etat.taille );
+return ( etat.pos >= 0 );
 }

@@ -21,9 +21,8 @@ fprintf( stderr,
 "\n        wav2src source.wav dest.c -c   # C non comprime compatible CHTI"
 "\n        wav2src source.wav dest.c -n   # C non comprime , struct nommee"
 "\n        wav2src source.wav dest.wav -w # test compression"
-"\n        wav2src source.wav dest.c -z   # C comprime, 11025 Hz\n\n");
-codec_init();
-codec_dump();
+"\n        wav2src source.wav dest.c -z   # C comprime, 11025 Hz"
+"\n        wav2src -       dequant.c -t   # table de dequantification en C , 11025 Hz\n\n");
 exit(1);
 }
 
@@ -207,6 +206,49 @@ close( s->hand );
 printf("fini ecriture %s\n", fnam );
 }
 
+// C source code avec audio comprime, tableau nomme de u32
+void write_comp_nom_c( FILE * dfil, wavpars * s, float * mbuf, char * nom )
+{
+fprintf( dfil, "#include \"../audio.h\"\n" );
+fprintf( dfil, "#ifdef USE_%s\n", nom );
+fprintf( dfil, "/* pour utiliser ce son, declarer :\n" );
+fprintf( dfil, "#define USE_%s\n", nom );
+fprintf( dfil, "extern const unsigned int %s[];\n", nom );
+fprintf( dfil, "*/\n" );
+fprintf( dfil, "const unsigned int %s[] = {\n", nom ); 
+// on a le son entier en mono dans mbuf[], comprimons-le dans un buffer wbuf
+printf("source %u ech. @ %u Hz, duree %g s\n", s->wavsize, s->freq, (double)s->wavsize / (double)s->freq );
+unsigned int qsamp = s->wavsize;
+unsigned int * wbuf;	// buffer pour audio comprime
+int retval;
+// comprimer et packer l'audio fourni dans mbuf (float normalise -1.0;1.0)
+// alloue la memoire pour wbuf, rend la taille de wbuf en unsigned int
+retval = compress2w32( qsamp, mbuf, &wbuf );
+if	( retval <= 0 )
+	gasp("echec compress2w32 : %d", retval );
+unsigned int qw32 = (unsigned int)retval;
+printf("compression effectuee : %u words de 32 bits\n", qw32 );
+unsigned int qbytes = ((s->wavsize*QBIT)/8)+1;
+printf("codage %d bits soit %u bytes = %g kbytes\n", QBIT, qbytes, ((double)qbytes)/1024.0 );
+// convertissons le binaire 32 bits en texte C
+fprintf( dfil, "%u,   // le nombre d'echantillons\n", qsamp );
+int i;
+for	( i = 0; i < ( qw32 - 1 ); ++i )
+	{
+	fprintf( dfil, "0x%08x, ", wbuf[i] );
+	if	( ( i % 4 ) == 3 )
+		fprintf( dfil, "\n" );
+	}
+// dernier element sans la virgule
+fprintf( dfil, "0x%08x };\n", wbuf[i] );
+fprintf( dfil, "#endif\n");
+}
+
+void write_comp_table( FILE * dfil )
+{
+codec_init();
+codec_dump( dfil );
+}
 
 int main( int argc, char ** argv )
 {
@@ -221,15 +263,18 @@ if ( argc != 4 ) usage();
 sprintf( snam, "%s", argv[1] );
 sprintf( dnam, "%s", argv[2] );
 
-printf("ouverture %s en lecture\n", snam );
-s.hand = open( snam, O_RDONLY | O_BINARY );
-if ( s.hand == -1 ) gasp("not found");
-
-WAVreadHeader( &s );
-wave_read_body_mono( &s, &mbuf );
-close( s.hand );
-
-printf("%u ech. @ %u Hz, duree %g s\n", s.wavsize, s.freq, (double)s.wavsize / (double)s.freq );
+if	( snam[0] != '-' )
+	{
+	printf("ouverture %s en lecture\n", snam );
+	s.hand = open( snam, O_RDONLY | O_BINARY );
+	if ( s.hand == -1 ) gasp("not found");
+		WAVreadHeader( &s );
+	wave_read_body_mono( &s, &mbuf );
+	close( s.hand );
+	printf("%u ech. @ %u Hz, duree %g s\n", s.wavsize, s.freq, (double)s.wavsize / (double)s.freq );
+	if	( s.freq != NOM_FSAMP )
+		printf("ATTENTION : freq d'echantillonnage %u au lieu de %u\n", s.freq, NOM_FSAMP );
+	}
 
 if	( argv[3][1] != 'w' )
 	{
@@ -252,6 +297,14 @@ switch	( argv[3][1] )
 		write_sl16_nom_c( dfil, &s, mbuf, dnam );
 		} break;
 	case 'w' : write_codec_wav( &s, mbuf, dnam ); break;
+	case 'z' :
+		{	// extraire le prenom du son
+		for	( int i = 1; i < strlen(dnam); ++i )
+			if	( dnam[i] == '.' )
+				dnam[i] = 0;
+		write_comp_nom_c( dfil, &s, mbuf, dnam );
+		} break;
+	case 't' : write_comp_table( dfil ); break;
 	default : usage();
 	}
 

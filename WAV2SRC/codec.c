@@ -56,38 +56,56 @@ for	( code = 0; code < ( 1 << QBIT ); ++code )
 	}
 }
 
-void codec_dump()
+void codec_dump( FILE * dfil )
 {
-printf("target_p = %u, kplaf = %g, QLIN = %u, QLOG = %u\n", target_p, kplaf, QLIN, QLOG );
-printf("serie exponentielle :\n");
-printf("\t%g\n", ((double)(QLIN-0.5)) );
+fprintf( dfil, "/* compression predictive avec perte\n" );
+fprintf( dfil, "amplitude nominale target_p = %u (soit (Fck/fsamp)/4 )\n", target_p );
+fprintf( dfil, "kplaf = %g, %u bits de code soit QLIN = %u, QLOG = %u\n", kplaf, QBIT, QLIN, QLOG );
+fprintf( dfil, "serie exponentielle :\n");
+fprintf( dfil, "\t%g\n", ((double)(QLIN-0.5)) );
 int i;
 for	( i = 0; i < ( QLOG - 1 ); ++i )
 	{
-	printf("\t%u\n", ddi[i] ); 
-	printf("\t%g\n", bnd[i] );
+	fprintf( dfil, "\t%u\n", ddi[i] ); 
+	fprintf( dfil, "\t%g\n", bnd[i] );
 	}
-printf("\t%u\n", ddi[QLOG-1] );
+fprintf( dfil, "\t%u\n", ddi[QLOG-1] );
 float v; unsigned short u;
-printf("test :\n");
+fprintf( dfil, "tests :\n");
 v = 2.0; u = quant( v );
-printf("\t%g -> %u -> %d\n", v, u, dequant[u] );
+fprintf( dfil, "\t%g -> %u -> %d\n", v, u, dequant[u] );
 v = -2.0; u = quant( v );
-printf("\t%g -> %u -> %d\n", v, u, dequant[u] );
+fprintf( dfil, "\t%g -> %u -> %d\n", v, u, dequant[u] );
 v = 100.0; u = quant( v );
-printf("\t%g -> %u -> %d\n", v, u, dequant[u] );
+fprintf( dfil, "\t%g -> %u -> %d\n", v, u, dequant[u] );
 v = -200.0; u = quant( v );
-printf("\t%g -> %u -> %d\n", v, u, dequant[u] );
+fprintf( dfil, "\t%g -> %u -> %d\n", v, u, dequant[u] );
 v = 666.0; u = quant( v );
-printf("\t%g -> %u -> %d\n", v, u, dequant[u] );
+fprintf( dfil, "\t%g -> %u -> %d\n", v, u, dequant[u] );
 v = 1111.0; u = quant( v );
-printf("\t%g -> %u -> %d\n", v, u, dequant[u] );
+fprintf( dfil, "\t%g -> %u -> %d\n", v, u, dequant[u] );
 v = 0.0; u = quant( v );
-printf("\t%g -> %u -> %d\n", v, u, dequant[u] );
+fprintf( dfil, "\t%g -> %u -> %d\n", v, u, dequant[u] );
 v = 2700.0; u = quant( v );
-printf("\t%g -> %u -> %d\n", v, u, dequant[u] );
+fprintf( dfil, "\t%g -> %u -> %d\n", v, u, dequant[u] );
 v = -7000.0; u = quant( v );
-printf("\t%g -> %u -> %d\n", v, u, dequant[u] );
+fprintf( dfil, "\t%g -> %u -> %d\n", v, u, dequant[u] );
+fprintf( dfil, " */\n");
+fprintf( dfil, "// definitions a reporter dans audio.h :\n" );
+fprintf( dfil, "// 72000000 / %u = %g Hz\n", target_p * 4, 72000000.0 / ( target_p * 4.0 ) );
+fprintf( dfil, "#define QBIT %d\n", QBIT );
+fprintf( dfil, "#define SAMP_PERIOD  %u\n", target_p * 4 );
+fprintf( dfil, "#define PWM_PERIOD   (SAMP_PERIOD/2)\n" );
+fprintf( dfil, "#define PWM_SILENCE  (PWM_PERIOD/2)\n\n" );
+fprintf( dfil, "const short dequant[] = {\n" ); 
+for	( i = 0; i < ( ( 1 << QBIT ) - 1 ); ++i )
+	{
+	fprintf( dfil, "%d, ", dequant[i] );
+	if	( ( i % 8 ) == 7 )
+		fprintf( dfil, "\n" );
+	}
+// dernier element sans la virgule
+fprintf( dfil, "%d };\n", dequant[i] );
 }
 
 // decodeur
