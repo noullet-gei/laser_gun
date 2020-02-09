@@ -1,6 +1,8 @@
 
 void gpio_init_gate( void );
 
+void gpio_power_on( void );
+
 void gpio_power_off( void );
 
 void gpio_laser_on( void );

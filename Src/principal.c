@@ -27,13 +27,23 @@ int cheat_tt = 0;	// target time : instant du prochain changement d'etat, en per
 #define DUREE_LOCK  	3	// duree de verrouillage mini avant prochain tir (avec ou sans son)
 #define DUREE_LOCK_MAX  600	// duree de verrouillage max en cheat mode
 
+int get_cheat_code()
+{
+short x = ((short int *)LAST_FLASH_PAGE)[0];
+short y = ((short int *)LAST_FLASH_PAGE)[1];
+if	( x == ~y )
+	return ( x & 7 );
+else	return 7;
+}
+
 // systick interrupt handler
 void sys_callback( void )
 {
 ++cnt10Hz;
 if	( cnt10Hz == DUREE_LASER )
 	{
-	gpio_laser_off();	// couper le laser apres 100ms
+	if	(!( ( mode == 2 ) && ( get_cheat_code() == 6 ) ) )
+		gpio_laser_off();	// couper le laser apres 100ms
 	if	( mode == 1 )
 		{		// demarrer audio apres 100ms (delai de demarrage de l'ampli TS4990)
 		switch	( freq )
@@ -42,26 +52,14 @@ if	( cnt10Hz == DUREE_LASER )
 			case 1 : audio_init( to_poing ); audio_start(); break;
 			case 2 : audio_init( zip_unk );  audio_start(); break;
 			case 3 : audio_init( pop );      audio_start(); break;
-			case 4 : say_number( 5352 );
-				 seq_start();
-				 break;
-				/*	{
-					int i = 0;
-					etat.seqbuf[i++] = (int)code;
-					etat.seqbuf[i++] = -5500;
-					etat.seqbuf[i++] = (int)three;
-					etat.seqbuf[i++] = -1000;
-					etat.seqbuf[i++] = (int)nine;
-					etat.seqbuf[i++] = -1000;
-					etat.seqbuf[i++] = (int)point;
-					etat.seqbuf[i++] = -1000;
-					etat.seqbuf[i++] = (int)zero;
-					etat.seqbuf[i++] = 0;
-					seq_init();
-					}
-				  break; */
+			case 4 : say_number( 5 );	 seq_start();   break;
+			case 5 : say_number( 6 );	 seq_start();   break;
 			default : audio_init( woui_pk ); audio_start();
 			}
+		}
+	else if	( mode == 2 )
+		{
+		say_code( get_cheat_code() ); seq_start();
 		}
 	return;
 	}
@@ -70,7 +68,7 @@ if	( ( cnt10Hz >= DUREE_LOCK ) && ( !audio_is_playing() ) && ( cheat_stat == 0 )
 	if	( gpio_get_mode() == 2 )	// il faut deja etre en M3 pour aller plus loin
 		{
 		cheat_stat = 1;
-		cheat_tt = cnt10Hz + 20;
+		cheat_tt = cnt10Hz + 20;	//
 		}
 	gpio_power_off();
 	return;
@@ -86,147 +84,79 @@ if	( cnt10Hz != cheat_tt )
 // on est ici parceque cnt10Hz == cheat_tt
 switch	( cheat_stat )
 	{
-	// on avait mis mode sur M3, on a attendu 2s que LED verte s'allume, alors on peut lacher gachette
+	// on avait mis mode sur M3, on a attendu 2s que LED verte s'allume
 	case 1 :
 	if	( gpio_get_mode() == 2 )
 		{
-		cheat_stat = ( freq + 1 ) * 100;
+		cheat_stat = 10;
+		// cheat_stat = ( freq + 1 ) * 100;
 		cheat_tt += 20;
-		gpio_init_gate();	// pour nous permettre de lacher la gachette, car DUREE_LOCK est passe
 		gpio_led( VERT, 1 );
 		}
 	break;
-	// le niveau de la frequence 1 : les 100
 	// mettre mode sur M2, dans 2s la LED rouge s'allume
-	case 100 :
+	case 10 :
 		{
 		cheat_stat++;
-		cheat_tt += 10;
+		cheat_tt += 5;
 		gpio_led( VERT, 0 ); gpio_led( ROUGE, 1 );
-		}
-	break;
-	// dans 1s la LED verte s'allume
-	case 101 :
-		{
-		cheat_stat++;
-		cheat_tt += 10;
-		gpio_led( ROUGE, 0 );
 		if	( gpio_get_mode() == 1 )
-			gpio_led( VERT, 1 );
-		else	{
-			cheat_stat = 0; gpio_power_off();
-			}
+			gpio_power_on();	// pour nous permettre de lacher la gachette, car DUREE_LOCK est passe
+		else	cheat_stat = 900;
 		}
 	break;
-	// alors metre mode sur M1, dans 1s la LED rouge s'allume
-	case 102 :
+	// si ok, dans 0.5s la LED verte s'allume et on peut lacher gachette
+	case 11 :
 		{
 		cheat_stat++;
-		cheat_tt += 10;
+		cheat_tt += 15;
+		gpio_led( ROUGE, 0 ); gpio_led( VERT, 1 );
+		}
+	break;
+	// alors metre mode sur M1, dans 1.5s la LED rouge s'allume
+	case 12 :
+		{
+		cheat_stat++;
+		cheat_tt += 5;
 		gpio_led( VERT, 0 ); gpio_led( ROUGE, 1 );
-		}
-	break;
-	// dans 1s la LED rouge s'eteint et laser s'allume pour 29s
-	case 103 :
-		{
-		cheat_stat++;
-		cheat_tt += 100;	// le temps de faire tests analog
-		gpio_led( ROUGE, 0 );
 		if	( gpio_get_mode() == 0 )
-			{
-			int resolution = PWM_Init_ff( TIM2, 3, periode_modu[6] );	// hors-jeu
-			TIM2->CCR3 = resolution / 2;		// a peu pres carre
-			gpio_laser_on();			// allumer le laser
-			}
-		else	gpio_power_off();
+			{}
+		else	cheat_stat = 900;
+		}
+	// si ok dans 0.5s la LED verte s'allume
+	case 13 :
+		{
+		cheat_stat = ( freq + 1 ) * 100;
+		cheat_tt += 10;
+		gpio_led( ROUGE, 0 ); gpio_led( VERT, 1 );
 		}
 	break;
-	// le niveau de la frequence 2 : les 200
-	case 200 :
+	// dans 1s la LED verte s'eteint et la rouge donne un bref flash
+	// F1 = 100 etc...
+	case 100 : case 200 : case 300 : case 400 : case 500 : case 600 :
 		{		// effacement
 		cheat_stat++;
 		cheat_tt += 10;
 		gpio_led( VERT, 0 ); gpio_led( ROUGE, 1 );
 		flashy_unlock();
 		flashy_page_erase( LAST_FLASH_PAGE );	// derniere page
-		gpio_led( ROUGE, 0 );
-		}
-	break;
-	case 201 :
-		{
-		cheat_stat++;
-		cheat_tt += 3;
-		gpio_led( VERT, 1 ); gpio_led( ROUGE, 1 );
-		}
-	break;
-	// le niveau de la frequence 3 : les 300
-	case 300 :
-		{		// lecture
-		short x;
-		cheat_stat++;
-		cheat_tt += 10;
-		x = ((short int *)LAST_FLASH_PAGE)[0];
-		gpio_led( VERT, x & 1 ); gpio_led( ROUGE, ( x >> 1 ) & 1 );
-		audio_init( to_poing ); audio_start(); gpio_init_audio();
-		}
-	break;
-	case 301 :
-		{
-		short x;
-		cheat_stat++;
-		cheat_tt += 10;
-		x = ((short int *)LAST_FLASH_PAGE)[1];
-		gpio_led( VERT, x & 1 ); gpio_led( ROUGE, ( x >> 1 ) & 1 );
-		audio_init( woui_pk ); audio_start(); gpio_init_audio();
-		}
-	break;
-	case 302 :
-		{
-		cheat_stat++;
-		cheat_tt += 3;
-		gpio_led( VERT, 1 ); gpio_led( ROUGE, 1 );
-		}
-	break;
-	// le niveau de la frequence 4 : les 400
-	case 400 :
-		{		// ecriture
-		cheat_stat++;
-		cheat_tt += 10;
-		gpio_led( VERT, 0 ); gpio_led( ROUGE, 1 );
+		short c = cheat_stat / 100;
 		flashy_unlock();
-		flashy_write_short( LAST_FLASH_PAGE, 1 );
-		flashy_write_short( LAST_FLASH_PAGE+2, 3 );
-		gpio_led( ROUGE, 0 );
+		flashy_write_short( LAST_FLASH_PAGE,    c );
+		flashy_unlock();
+		flashy_write_short( LAST_FLASH_PAGE+2, ~c );
+		gpio_led( VERT, 0 ); gpio_led( ROUGE, 0 );
 		}
 	break;
-	case 401 :
-		{
-		cheat_stat++;
-		cheat_tt += 3;
-		gpio_led( VERT, 1 ); gpio_led( ROUGE, 1 );
-		}
-	break;
-	// le niveau de la frequence 5 : les 500
-	case 500 :
-		{		// ecriture
+	case 101 : case 201 : case 301 : case 401 : case 501 : case 601 :
+		{		// bye
 		cheat_stat++;
 		cheat_tt += 10;
-		gpio_led( VERT, 0 ); gpio_led( ROUGE, 1 );
-		flashy_unlock();
-		flashy_write_short( LAST_FLASH_PAGE, 2 );
-		flashy_write_short( LAST_FLASH_PAGE+2, 0 );
-		gpio_led( ROUGE, 0 );
-		}
-	break;
-	case 501 :
-		{
-		cheat_stat++;
-		cheat_tt += 3;
 		gpio_led( VERT, 1 ); gpio_led( ROUGE, 1 );
 		}
 	break;
-
 	default :
+		gpio_led( VERT, 0 ); gpio_led( ROUGE, 0 );	// en cas d'alim forcee
 		cheat_stat = 0; gpio_power_off();
 	}
 }

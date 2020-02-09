@@ -42,6 +42,12 @@ GPIO_Configure( GPIOB, 14, INPUT, INPUT_FLOATING );
 GPIO_Set( GPIOB, 14 );		// power unlock
 }
 
+void gpio_power_on( void )
+{
+GPIO_Configure( GPIOB, 14, OUTPUT, OUTPUT_OPDRAIN );	// FT out must be open-drain
+GPIO_Clear( GPIOB, 14 );		// power lock
+}
+
 void gpio_laser_on( void )
 {
 GPIO_Set( GPIOA, 9 );

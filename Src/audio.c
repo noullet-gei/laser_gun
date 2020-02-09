@@ -115,7 +115,7 @@ next_seqel();
 }
 
 // const unsigned int * const digits[] = { zero, one, two, three, four, five, six, seven, eight, nine };
-const unsigned int * const digits[] = { zero, one, two, three, five, five, five, five, five, five };
+const unsigned int * const digits[] = {    one,  one, one, one,   one,  five, six, seven, one,   one };
 
 // preparer une sequence audio epelant un nombre
 int say_number( unsigned int n )
@@ -136,3 +136,18 @@ while	( c )
 etat.seqbuf[is++] = 0;
 return is;
 }
+
+// preparer une sequence audio disant "code" suivi d'un chiffre
+int say_code( unsigned int c )
+{
+int is = 0;
+etat.seqbuf[is++] = (int)code;
+etat.seqbuf[is++] = -3000;
+if	( ( c <= 9 ) && ( is < ( QSEQ - 2 ) ) )
+	{
+	etat.seqbuf[is++] = (int)digits[c];
+	}
+etat.seqbuf[is++] = 0;
+return is;
+}
+
