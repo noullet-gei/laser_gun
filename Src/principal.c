@@ -5,23 +5,6 @@
 
 #define GREEN_CPU
 
-/* gamme temperee en Q15
-const static int coeff_detune[] = {
-//	52016,
-//	49096,
-//	46340,
-	43740,
-//	41285,
-	38967,
-//	36780,
-	34716,
-	32768,	// orig
-//	30929,
-	29193,
-//	27554,
-	26008 };
-*/
-
 // arrondi optimal de N/D : ((2N/D)+1)/2
 // calcule a la compilation
 const static unsigned int periode_modu[] = {
@@ -55,14 +38,30 @@ if	( cnt10Hz == DUREE_LASER )
 		{		// demarrer audio apres 100ms (delai de demarrage de l'ampli TS4990)
 		switch	( freq )
 			{
-			case 0 : audio_init( woui_pk ); break;
-			case 1 : audio_init( to_poing ); break;
-			case 2 : audio_init( zip_unk ); break;
-			case 3 : audio_init( pop ); break;
-			default : audio_init( woui_pk );
+			case 0 : audio_init( woui_pk );  audio_start(); break;
+			case 1 : audio_init( to_poing ); audio_start(); break;
+			case 2 : audio_init( zip_unk );  audio_start(); break;
+			case 3 : audio_init( pop );      audio_start(); break;
+			case 4 : say_number( 5352 );
+				 seq_start();
+				 break;
+				/*	{
+					int i = 0;
+					etat.seqbuf[i++] = (int)code;
+					etat.seqbuf[i++] = -5500;
+					etat.seqbuf[i++] = (int)three;
+					etat.seqbuf[i++] = -1000;
+					etat.seqbuf[i++] = (int)nine;
+					etat.seqbuf[i++] = -1000;
+					etat.seqbuf[i++] = (int)point;
+					etat.seqbuf[i++] = -1000;
+					etat.seqbuf[i++] = (int)zero;
+					etat.seqbuf[i++] = 0;
+					seq_init();
+					}
+				  break; */
+			default : audio_init( woui_pk ); audio_start();
 			}
-		audio_start();
-		gpio_init_audio();
 		}
 	return;
 	}
@@ -244,6 +243,7 @@ CLOCK_Configure();
 // Timer 2 CH3 en PWM
 gpio_init_modu();
 gpio_init_aux();
+// gpio_init_audio();
 freq = gpio_get_freq();
 int resolution = PWM_Init_ff( TIM2, 3, periode_modu[freq] );
 TIM2->CCR3 = resolution / 2;	// a peu pres carre
@@ -259,6 +259,7 @@ SysTick_Enable_IT;
 
 mode = gpio_get_mode();
 etat.pos = -1;		// pour que audio_is_playing() rende 0 si on n'a pas initialise l'audio
+etat.iseq = -1;		// index sequence audio (-1 = pas de sequence en cours)
 
 while	(1)
 	{

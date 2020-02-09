@@ -1,14 +1,52 @@
 #include "gssp72.h"
 #include "audio.h"
+#include "g_gpio.h"
+#include <stdio.h>
 
 type_etat etat;
+
+
+static void next_seqel(void)
+{
+etat.pos = -1; etat.silcnt = 0;
+if	( etat.iseq >= 0 )
+	{
+	int seqel = etat.seqbuf[etat.iseq++];
+	if	( seqel > 0 )
+		{
+		audio_init( (const unsigned int *)seqel );
+		audio_start();
+		}
+	else if	( seqel < 0 )
+		etat.silcnt = -seqel;
+	else	etat.iseq = -1;
+	}
+}
 
 // interrupt audio
 void sample_callbak( void )
 {
 int pos = etat.pos;
 if	( pos < 0 )
+	{				// pas de son en cours
 	TIM3->CCR3 = PWM_SILENCE;
+	if	( etat.iseq >= 0 )
+		{			// sequence en cours ?
+		if	( etat.silcnt > 0 )
+			--etat.silcnt;	// silence en cours
+		else	{		// silence fini
+			next_seqel();
+			}
+		}
+	// else	;	// disable audio interrupt
+	}
+else if	( pos >= etat.tai )
+	{				// son fini
+	etat.pos = -1;
+	if	( etat.iseq >= 0 )
+		next_seqel();
+	// else	;	// disable audio interrupt
+	}
 else	{
 	// extraire le code du buffer
 	unsigned int pb0 = etat.pb0;
@@ -30,8 +68,6 @@ else	{
 	TIM3->CCR3 = sig;
 	// avancer le compteur
 	pos++;
-	if	( pos >= etat.tai )
-		pos = -1;
 	etat.pos = pos;
 	}
 }
@@ -63,10 +99,40 @@ Run_Timer( TIM4 );
 
 void audio_start()
 {
-etat.pos = 0;
+etat.pos = 0; gpio_init_audio();
 }
 
 int audio_is_playing()
 {
-return ( etat.pos >= 0 );
+return ( ( etat.pos >= 0 ) || ( etat.iseq >= 0 ) );
+}
+
+// a appeler apres avoir renseigne etat.seqbuf[] 
+void seq_start( void )
+{
+etat.iseq = 0;
+next_seqel();
+}
+
+// const unsigned int * const digits[] = { zero, one, two, three, four, five, six, seven, eight, nine };
+const unsigned int * const digits[] = { zero, one, two, three, five, five, five, five, five, five };
+
+// preparer une sequence audio epelant un nombre
+int say_number( unsigned int n )
+{
+char tbuf[8];
+snprintf( tbuf, sizeof(tbuf), "%u", n );
+int i = 0, is = 0, c = tbuf[i++];
+while	( c )
+	{
+	c -= '0';
+	if	( ( c >= 0 ) && ( c <= 9 ) && ( is < ( QSEQ - 2 ) ) )
+		{
+		etat.seqbuf[is++] = (int)digits[c];
+		etat.seqbuf[is++] = -1000;
+		}
+	c = tbuf[i++];
+	};
+etat.seqbuf[is++] = 0;
+return is;
 }
