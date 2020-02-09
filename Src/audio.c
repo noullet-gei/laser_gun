@@ -11,19 +11,21 @@ if	( pos < 0 )
 	TIM3->CCR3 = PWM_SILENCE;
 else	{
 	// extraire le code du buffer
-	unsigned short pb0 = etat.pb0;
-	unsigned short zecode = ( etat.zew >> pb0 );
+	unsigned int pb0 = etat.pb0;
+	unsigned int zecode = ( etat.zew >> pb0 );
 	pb0 += QBIT;
 	if	( pb0 >= 32 )
 		{			// passer au word suivant
 		etat.zew = etat.wbuf1[etat.iw++];
-		pb0 -= 32; etat.pb0 = pb0;
+		pb0 -= 32;
 		if	( pb0 > 0 )	// traiter residu
 			zecode |= ( etat.zew << ( QBIT - pb0 ) ); 
 		}
+	etat.pb0 = pb0;
 	zecode &= ( ( 1 << QBIT ) - 1 );
 	// decoder le sample
-	short sig = etat.oldsig + dequant[zecode];
+	short sig = etat.oldsig;
+	sig += dequant[zecode];
 	etat.oldsig = sig;
 	TIM3->CCR3 = sig;
 	// avancer le compteur
@@ -41,10 +43,10 @@ void audio_init( const unsigned int * leson )
 etat.tai = leson[0];		// nombre de samples du son
 etat.wbuf1 = leson + 1;		// pack de codes
 etat.pos = -1;			// position en samples (-1 = stop)
-etat.iw = 0;			// indice du word (32 bits)
+etat.iw = 1;			// indice du word (32 bits) N.B. 1 parceque le premier word est lu ci-dessous
 etat.pb0 = 0;			// position du lsb du code courant dans le word courant	
 etat.zew = etat.wbuf1[0];	// word courant
-etat.oldsig = 0;		// predicteur
+etat.oldsig = PWM_SILENCE;	// predicteur N.B. cette valeur initiale determine la composante continue
 
 // le timer pour la source PWM (ch. 3 pour TIM3-CH3)
 // la frequence PWM doit

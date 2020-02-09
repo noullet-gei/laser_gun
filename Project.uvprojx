@@ -454,6 +454,11 @@
               <FileType>1</FileType>
               <FilePath>.\Src\Sons\zip_unk.c</FilePath>
             </File>
+            <File>
+              <FileName>pop.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Src\Sons\pop.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -908,6 +913,11 @@
               <FileName>zip_unk.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\Src\Sons\zip_unk.c</FilePath>
+            </File>
+            <File>
+              <FileName>pop.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Src\Sons\pop.c</FilePath>
             </File>
           </Files>
         </Group>

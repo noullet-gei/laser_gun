@@ -58,7 +58,7 @@ if	( cnt10Hz == DUREE_LASER )
 			case 0 : audio_init( woui_pk ); break;
 			case 1 : audio_init( to_poing ); break;
 			case 2 : audio_init( zip_unk ); break;
-			case 3 : audio_init( zip_unk ); break;
+			case 3 : audio_init( pop ); break;
 			default : audio_init( woui_pk );
 			}
 		audio_start();
@@ -258,11 +258,12 @@ SysTick_On;
 SysTick_Enable_IT;
 
 mode = gpio_get_mode();
+etat.pos = -1;		// pour que audio_is_playing() rende 0 si on n'a pas initialise l'audio
 
 while	(1)
 	{
-	if	( !GPIO_Read( GPIOA, 0 ) )
-		GPIO_Clear( GPIOC, 12 );
+	if	( !GPIO_Read( GPIOA, 0 ) )	// bouton carre - c'est pour faciliter le debug si necesaire
+		GPIO_Clear( GPIOC, 12 );	// LED verte Olimex
 	#ifdef GREEN_CPU
 	else	{
 		SCB->SCR = 0;				// avoid deep sleep

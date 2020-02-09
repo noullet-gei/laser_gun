@@ -11,6 +11,8 @@ extern const unsigned int woui_pk[];
 extern const unsigned int to_poing[];
 #define USE_zip_unk
 extern const unsigned int zip_unk[];
+#define USE_pop
+extern const unsigned int pop[];
 
 // etat du systeme audio
 typedef struct {

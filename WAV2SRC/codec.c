@@ -153,6 +153,8 @@ return retval;
 
 // niveau buffer entier
 
+// #define DUMP_ZECODE
+
 // comprimer et packer l'audio fourni dans mbuf (float normalise -1.0;1.0)
 // alloue la memoire pour wbuf, rend la taille de wbuf en unsigned int
 int compress2w32( unsigned int qsamp, float * mbuf, unsigned int ** pwbuf )
@@ -177,6 +179,9 @@ iw = 0; zew = 0; pb0 = 0;
 for	( ic = 0; ic < qsamp; ++ic )
 	{
 	zecode = (unsigned int)encode( mbuf[ic] * ((float)target_p) );
+	#ifdef DUMP_ZECODE
+	printf("%d\n", zecode );
+	#endif
 	zew |= ( zecode << pb0 );
 	pb0 += QBIT;
 	if	( pb0 >= 32 )
