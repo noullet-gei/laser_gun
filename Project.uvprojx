@@ -409,6 +409,11 @@
               <FileType>1</FileType>
               <FilePath>.\Src\dequant.c</FilePath>
             </File>
+            <File>
+              <FileName>adc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Src\adc.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -928,6 +933,11 @@
               <FileName>dequant.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\Src\dequant.c</FilePath>
+            </File>
+            <File>
+              <FileName>adc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Src\adc.c</FilePath>
             </File>
           </Files>
         </Group>

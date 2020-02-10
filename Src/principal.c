@@ -2,6 +2,7 @@
 #include "g_gpio.h"
 #include "audio.h"
 #include "flashy.h"
+#include "adc.h"
 
 #define GREEN_CPU
 
@@ -21,6 +22,8 @@ int mode = 0;
 int freq = 0;		// index dans periode_modu
 int cheat_stat = 0;	// state machine state
 int cheat_tt = 0;	// target time : instant du prochain changement d'etat, en periodes systick 
+
+unsigned int voltage;
 
 // durees exprimees en periode systick (nominal 100ms)
 #define DUREE_LASER 	1
@@ -68,7 +71,7 @@ if	( ( cnt10Hz >= DUREE_LOCK ) && ( !audio_is_playing() ) && ( cheat_stat == 0 )
 	if	( gpio_get_mode() == 2 )	// il faut deja etre en M3 pour aller plus loin
 		{
 		cheat_stat = 1;
-		cheat_tt = cnt10Hz + 20;	//
+		cheat_tt = cnt10Hz + 20;
 		}
 	gpio_power_off();
 	return;
@@ -88,10 +91,32 @@ switch	( cheat_stat )
 	case 1 :
 	if	( gpio_get_mode() == 2 )
 		{
-		cheat_stat = 10;
-		// cheat_stat = ( freq + 1 ) * 100;
-		cheat_tt += 20;
+		cheat_stat++;
+		cheat_tt += 1;
 		gpio_led( VERT, 1 );
+		adc_init();
+		}
+	else	cheat_stat = 900;
+	break;
+	case 2 :
+		{
+		cheat_stat++;
+		cheat_tt += 1;
+		adc_start_cal();
+		}
+	break;
+	case 3 :
+		{
+		cheat_stat++;
+		cheat_tt += 1;
+		adc_start_conv();
+		}
+	break;
+	case 4 :
+		{
+		cheat_stat = 10;
+		cheat_tt += 17;
+		voltage = ( 4095 * 1200 ) / adc_get();
 		}
 	break;
 	// mettre mode sur M2, dans 2s la LED rouge s'allume
