@@ -18,8 +18,6 @@ const static unsigned int periode_modu[] = {
 	((2*72000000/110000)+1)/2 };	// frequence hors-jeu
 
 unsigned int cnt10Hz = 0;
-int mode = 0;
-int freq = 0;		// index dans periode_modu
 int cheat_stat = 0;	// state machine state
 int cheat_tt = 0;	// target time : instant du prochain changement d'etat, en periodes systick 
 
@@ -45,11 +43,11 @@ void sys_callback( void )
 ++cnt10Hz;
 if	( cnt10Hz == DUREE_LASER )
 	{
-	if	(!( ( mode == 2 ) && ( get_cheat_code() == 6 ) ) )
+	if	(!( ( gpio_get_mode() == 2 ) && ( get_cheat_code() == 6 ) ) )
 		gpio_laser_off();	// couper le laser apres 100ms
-	if	( mode == 1 )
+	if	( gpio_get_mode() == 1 )
 		{		// demarrer audio apres 100ms (delai de demarrage de l'ampli TS4990)
-		switch	( freq )
+		switch	( gpio_get_freq() )
 			{
 			case 0 : audio_init( woui_pk );  audio_start(); break;
 			case 1 : audio_init( to_poing ); audio_start(); break;
@@ -60,9 +58,15 @@ if	( cnt10Hz == DUREE_LASER )
 			default : audio_init( woui_pk ); audio_start();
 			}
 		}
-	else if	( mode == 2 )
+	else if	( gpio_get_mode() == 2 )
 		{
-		say_code( get_cheat_code() ); seq_start();
+		int zecode = get_cheat_code();
+		if	( zecode != 1 )
+			{
+			if	( zecode == 2 )
+				{ audio_init( roca );  audio_start(); }
+			else	{ say_code( zecode ); seq_start(); }
+			}
 		}
 	return;
 	}
@@ -73,6 +77,7 @@ if	( ( cnt10Hz >= DUREE_LOCK ) && ( !audio_is_playing() ) && ( cheat_stat == 0 )
 		cheat_stat = 1;
 		cheat_tt = cnt10Hz + 20;
 		}
+	else	cheat_stat = 900;
 	gpio_power_off();
 	return;
 	}
@@ -117,6 +122,7 @@ switch	( cheat_stat )
 		cheat_stat = 10;
 		cheat_tt += 17;
 		voltage = ( 4095 * 1200 ) / adc_get();
+		say_voltage( voltage ); seq_start();
 		}
 	break;
 	// mettre mode sur M2, dans 2s la LED rouge s'allume
@@ -124,10 +130,13 @@ switch	( cheat_stat )
 		{
 		cheat_stat++;
 		cheat_tt += 5;
-		gpio_led( VERT, 0 ); gpio_led( ROUGE, 1 );
+		gpio_led( VERT, 0 ); gpio_led( ROUGE, 0 );
 		if	( gpio_get_mode() == 1 )
+			{
 			gpio_power_on();	// pour nous permettre de lacher la gachette, car DUREE_LOCK est passe
-		else	cheat_stat = 900;
+ 			gpio_led( ROUGE, 1 );
+ 			}
+	else	cheat_stat = 900;
 		}
 	break;
 	// si ok, dans 0.5s la LED verte s'allume et on peut lacher gachette
@@ -143,15 +152,18 @@ switch	( cheat_stat )
 		{
 		cheat_stat++;
 		cheat_tt += 5;
-		gpio_led( VERT, 0 ); gpio_led( ROUGE, 1 );
+		gpio_led( VERT, 0 ); gpio_led( ROUGE, 0 );
 		if	( gpio_get_mode() == 0 )
-			{}
+			{
+			gpio_led( ROUGE, 1 );
+			}
 		else	cheat_stat = 900;
 		}
+	break;
 	// si ok dans 0.5s la LED verte s'allume
 	case 13 :
 		{
-		cheat_stat = ( freq + 1 ) * 100;
+		cheat_stat = ( gpio_get_freq() + 1 ) * 100;
 		cheat_tt += 10;
 		gpio_led( ROUGE, 0 ); gpio_led( VERT, 1 );
 		}
@@ -180,9 +192,10 @@ switch	( cheat_stat )
 		gpio_led( VERT, 1 ); gpio_led( ROUGE, 1 );
 		}
 	break;
+	case 900 :
 	default :
 		gpio_led( VERT, 0 ); gpio_led( ROUGE, 0 );	// en cas d'alim forcee
-		cheat_stat = 0; gpio_power_off();
+		cheat_stat = 900; gpio_power_off();
 	}
 }
 
@@ -199,8 +212,7 @@ CLOCK_Configure();
 gpio_init_modu();
 gpio_init_aux();
 // gpio_init_audio();
-freq = gpio_get_freq();
-int resolution = PWM_Init_ff( TIM2, 3, periode_modu[freq] );
+int resolution = PWM_Init_ff( TIM2, 3, periode_modu[gpio_get_freq()] );
 TIM2->CCR3 = resolution / 2;	// a peu pres carre
 gpio_laser_on();		// allumer le laser
 		
@@ -212,7 +224,6 @@ Systick_Prio_IT( 3, sys_callback );
 SysTick_On;
 SysTick_Enable_IT;
 
-mode = gpio_get_mode();
 etat.pos = -1;		// pour que audio_is_playing() rende 0 si on n'a pas initialise l'audio
 etat.iseq = -1;		// index sequence audio (-1 = pas de sequence en cours)
 

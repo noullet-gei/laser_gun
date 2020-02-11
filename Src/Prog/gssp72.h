@@ -6,7 +6,7 @@
  * et n'est pas destinee a etre precompilee, pour simplifier la migration hors-Keil
  */
 
-#include "GSSP72/GPIO.h"
-#include "GSSP72/Timer_Systick.h"
-#include "GSSP72/TIMER_1234.h"
-#include "GSSP72/clock.h"
+#include "../GSSP72/GPIO.h"
+#include "../GSSP72/Timer_Systick.h"
+#include "../GSSP72/TIMER_1234.h"
+#include "../GSSP72/clock.h"

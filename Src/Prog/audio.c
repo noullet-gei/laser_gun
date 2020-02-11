@@ -114,8 +114,8 @@ etat.iseq = 0;
 next_seqel();
 }
 
-// const unsigned int * const digits[] = { zero, one, two, three, four, five, six, seven, eight, nine };
-const unsigned int * const digits[] = {    one,  one, one, one,   one,  five, six, seven, one,   one };
+const unsigned int * const digits[] = { zero, one, two, three, four, five, six, seven, eight, nine };
+// const unsigned int * const digits[] = {    one,  one, one, one,   one,  five, six, seven, one,   one };
 
 // preparer une sequence audio epelant un nombre
 int say_number( unsigned int n )
@@ -136,6 +136,40 @@ while	( c )
 etat.seqbuf[is++] = 0;
 return is;
 }
+
+// preparer une sequence audio epelant un voltage
+int say_voltage( unsigned int n )
+{
+char tbuf[8];
+// convertir en les mV en centi-Volts
+n += 5;		// arrondi
+n /= 10;
+snprintf( tbuf, sizeof(tbuf), "%03u", n );
+int id = 0;	// index digit
+int is = 0;	// index dans la sequence
+int c;
+etat.seqbuf[is++] = (int)bat;
+etat.seqbuf[is++] = -1000;
+c = tbuf[id++];
+while	( c )
+	{
+	c -= '0';
+	if	( ( c >= 0 ) && ( c <= 9 ) && ( is < ( QSEQ - 2 ) ) )
+		{
+		etat.seqbuf[is++] = (int)digits[c];
+		etat.seqbuf[is++] = -1000;
+		}
+	if	( id == 1 )
+		{
+		etat.seqbuf[is++] = (int)point;
+		etat.seqbuf[is++] = -1000;
+		}
+	c = tbuf[id++];
+	};
+etat.seqbuf[is++] = 0;
+return is;
+}
+
 
 // preparer une sequence audio disant "code" suivi d'un chiffre
 int say_code( unsigned int c )

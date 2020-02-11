@@ -75,5 +75,8 @@ void seq_start( void );
 // preparer une sequence audio epelant un nombre
 int say_number( unsigned int n );
 
+// preparer une sequence audio epelant un voltage
+int say_voltage( unsigned int n );
+
 // preparer une sequence audio disant "code" suivi d'un chiffre
 int say_code( unsigned int c );
